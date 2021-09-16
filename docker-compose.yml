@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: ./build/go/Dockerfile
+    tty: true
+    ports:
+      - 8080:8080
+    volumes:
+      - "./app/src:/go/src/app/"
+    command: >
+      sh -c "reflex -s -r '\.go$$' go run main.go"
+  vue:
+    build:
+      context: ./
+      dockerfile: ./build/vue/Dockerfile
+    ports:
+      - 9000:9000
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+  db:
+    image: mysql:8.0.14
+    restart: always
+    expose:
+      - "3306"
+    ports:
+      - "23306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: test
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: vue_go_dev
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    
